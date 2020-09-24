@@ -1,0 +1,121 @@
+import React, { Component } from 'react'
+import {userContext} from './UseContent';
+import {someContent} from './Parent';
+
+export class MyList extends Component {
+    constructor(props) {
+        super(props)
+    
+        this.state = {
+             isDisabled : true,
+             btnLabel : 'enable delete',
+             list:[],
+             item:''
+        }
+
+        this.inputElmnt = React.createRef();
+    }
+
+    _doc = (id)=>{
+        return document.getElementById(id)
+    }
+
+    componentDidMount(){
+        this._doc('toggleBtn').style.display = 'none';
+
+    }
+    
+    componentDidUpdate(prevProps, prevState, snapshotValue){
+        if(prevState.list !== this.state.list || prevState.isDisabled !== this.state.isDisabled){
+            this.inputElmnt.current.value ='';
+            this.inputElmnt.current.focus();
+        }
+    }
+
+    addItem= ()=>{
+        if(this.inputElmnt.current.value !== ''){
+            this.setState({list:[...this.state.list, this.state.item]})
+            this._doc('toggleBtn').style.display = 'inline';
+        }
+        return false;
+    }
+
+    removeItem= (itemToRemove)=>{
+        var arr = this.state.list;          // 1. get current state of array
+        var pos = arr.indexOf(itemToRemove) // 2. get the item position
+        arr.splice(pos,1)                   // 3. splice it out
+
+        this.setState({list : arr})         // 4. set the arraylist to the newly modified array
+    }
+
+    toggleDisable= ()=>{
+        this.setState({isDisabled : !this.state.isDisabled});
+        this.setState({btnLabel : this.state.isDisabled ? 'disable delete':'enable delete'})
+    }
+
+    render() {
+        return (
+            <div>
+                <input 
+                    ref={this.inputElmnt} 
+                    id="addItem" 
+                    type="input" 
+                    value={this.state.item} 
+                    onChange={(e)=>this.setState({item : e.target.value})}/>
+
+                <button 
+                    type="button" 
+                    onClick={this.addItem}>
+                    add item
+                </button>
+
+                <button 
+                    id="toggleBtn"
+                    type="button"
+                    onClick={this.toggleDisable}>
+                    {this.state.btnLabel}
+                </button>
+                
+                <div>
+                    <userContext.Consumer>
+                        {
+                            (user)=>{
+                                return <h1>{user}</h1>
+                            }
+                        }
+                    </userContext.Consumer>
+
+                    <someContent.Consumer>
+                        {
+                            function(content){
+                                return <h1>{content}</h1>
+                            }
+                            
+                        }
+                    </someContent.Consumer>
+                    <ul>
+                    {
+                        this.state.list.map((item,index)=>{
+                            return (
+                                <li key={index} style={{listStyle:'none'}}>
+                                    <span style={{display:"inline-block"}}>{item}</span>
+                                    <button 
+                                        id="deleteBtn" 
+                                        type="button" 
+                                        style={{color:'red',marginLeft:'10px'}}
+                                        disabled={this.state.isDisabled}
+                                        onClick={()=>this.removeItem(item)}>
+                                            x
+                                    </button>
+                                </li>
+                                )
+                            })
+                    }
+                    </ul>
+                </div>
+            </div>
+        )
+    }
+}
+
+export default MyList
